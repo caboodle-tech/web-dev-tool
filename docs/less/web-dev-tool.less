@@ -1,0 +1,509 @@
+/**
+ * Compiled LESS for Web Dev Tool.
+ *
+ * This CSS should be minified and then copied to the style variable in
+ * web-dev-tool.js for a production release. It is only here as a CSS
+ * file to make development work easier.
+ */
+#_web-dev-tool{
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-top: 1px solid #000;
+
+    #_wdt-tools-resizer {
+        position: absolute;
+        top: -10px;
+        left: 0;
+        right: 0;
+        height: 10px;
+        background-color: rgba(255,255,255,0);
+        cursor: ns-resize;
+    }
+
+    #_wdt-toolbar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 30px;
+        color: #d8d8d8;
+        background-color: #333333;
+        padding: 0 15px;
+        border-top: 1px solid #4c4c4c;
+        border-bottom: 1px solid #4c4c4c;
+        z-index: 5000;
+
+        ._wdt-tab {
+            display: inline-block;
+            height: 28px;
+            max-height: 28px;
+            font-size: 15px;
+            line-height: 28px;
+            padding: 0 15px;
+            overflow: hidden;
+            cursor: pointer;
+
+            &._wdt-active {
+                color: #fff;
+                background-color: #1f1f1f;
+            }
+
+            &:hover {
+                color: #fff;
+                background-color: #1f1f1f;
+            }
+        }
+
+        #_wdt-console-counts {
+            float: right;
+            display: inline-block;
+            height: 28px;
+            line-height: 28px;
+            cursor: pointer;
+
+            ._wdt-error-icon {
+                position: relative;
+                display: inline-block;
+
+                svg{
+                    margin-bottom: -2px;
+                    fill: #ff8080;
+                    width: 15px;
+                    height: 15px;
+                }
+            }
+
+            ._wdt-warn-icon {
+                position: relative;
+                display: inline-block;
+
+                svg{
+                    margin-bottom: -2px;
+                    fill: #fedc9d;
+                    width: 15px;
+                    height: 15px;
+                }
+            }
+
+            ._wdt-count {
+                display: inline-block;
+                padding: 0 10px 0 5px;
+            }
+        }
+
+        #_wdt-version {
+            float: right;
+
+            a, a:visited {
+                color: #d8d8d8;
+            }
+
+            &:hover a {
+                color: #fff;
+            }
+        }
+
+        #_wdt-closeButton {
+            display: flex;
+            align-items: center;
+            float: right;
+            height: 28px;
+            max-height: 28px;
+            line-height: 28px;
+            padding: 0 15px;
+            cursor: pointer;
+
+            svg {
+                height: 18px;
+                width: 18px;
+                fill: #d8d8d8;
+            }
+
+            &:hover {
+                background-color: #1f1f1f;
+            }
+
+            &:hover svg {
+                color: #fff;
+            }
+        }
+    } // END TOOLBAR
+
+    #_wdt-page {
+        position: absolute;
+        top: 30px;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow-y: auto;
+        background-color: #232323;
+        font-family: monospace;
+        color: #71aed5;
+
+        ._wdt-hidden {
+            display: none;
+        }
+
+        #_wdt-elementPage {
+            flex-direction: column;
+            padding: 0.5rem 0.5rem 0.5rem 0;
+
+            ._wdt-row {
+
+                ._wdt-open-arrow, ._wdt-close-arrow {
+                    position: absolute;
+                    display: block;
+                    margin: 2px 0 0 -20px;
+                    width: 18px;
+                    height: 18px;
+                    cursor: pointer;
+
+                    svg {
+                        fill: #aaaaaa;
+                        width: 18px;
+                        height: 18px;
+                        cursor: pointer;
+                    }
+
+                    &:after {
+                        content: '';
+                        display: block;
+                        position: absolute;
+                        top: -3px;
+                        left: -6px;
+                        width: 25px;
+                        height: 25px;
+                    }
+                }
+
+                ._wdt-close-arrow {
+                    display: none;
+                }
+
+                &._wdt-open {
+                    position: relative;
+
+                    &> ._wdt-open-arrow {
+                        display: none;
+                    }
+                    &> ._wdt-more {
+                        display: none;
+                    }
+                    &> ._wdt-close-arrow {
+                        display: block;
+                    }
+                }
+
+                &:hover {
+                    background-color: #252c36;
+                    cursor:default;
+                }
+            }
+
+            .children {
+                //display: none;
+            }
+
+            .attribute {
+                display: inline-block;
+                color: #9bb6c7;
+            }
+
+            .value {
+                display: inline-block;
+                color: #d38643;
+            }
+
+            .white {
+                display: inline-block;
+                color: #fff;
+            }
+        }
+
+        #_wdt-consolePage {
+            flex-direction: column;
+            height: 100%;
+
+            a, a:visited {
+                color: #71aed5;
+                text-decoration: none;
+            }
+
+            a:hover {
+                text-decoration: underline;
+            }
+
+            #_wdt-console-messages {
+
+                ._wdt-row {
+                    display: flex;
+                    padding: 3px 10px;
+
+                    ._wdt-msg {
+                        flex: 1;
+                        text-align: left;
+
+                        ._wdt-row {
+                            cursor: default;
+
+                            ._wdt-open-arrow, ._wdt-close-arrow {
+                                margin: 2px 0 0 -9px;
+                                width: 18px;
+                                height: 18px;
+                                cursor: pointer;
+
+                                svg {
+                                    fill: #aaaaaa;
+                                    width: 18px;
+                                    height: 18px;
+                                }
+                            }
+
+                            ._wdt-close-arrow {
+                                display: none;
+                            }
+
+                            ._wdt-symbol {
+                                display: inline-block;
+                                color: #209cee;
+                                font-style: italic;
+                                font-weight: bold;
+                            }
+
+                            ._wdt-more {
+                                display: inline-block;
+                            }
+
+                            &._wdt-open {
+                                &> ._wdt-open-arrow {
+                                    display: none;
+                                }
+                                &> ._wdt-more {
+                                    display: none;
+                                }
+                                &> ._wdt-close-arrow {
+                                    display: block;
+                                }
+                            }
+                        }
+                    }
+
+                    ._wdt-source {
+                        text-align: right;
+                    }
+                }
+
+                ._wdt-error, ._wdt-consume {
+                    color: #ff8080;
+                    border-top: 1px solid #5c0000;
+                    border-bottom: 1px solid #5c0000;
+                    background-color: #290000;
+
+                    ._wdt-error-icon {
+                        position: relative;
+                        display: inline-block;
+                        width: 16px;
+                        height: 16px;
+                        margin: 0 10px 0 0px;
+
+                        svg {
+                            position: absolute;
+                            top: 2px;
+                            fill: #ff8080;
+                            width: 16px;
+                            height: 16px;
+                        }
+                    }
+                }
+
+                ._wdt-warn {
+                    color: #fedc9d;
+                    border-top: 1px solid #665500;
+                    border-bottom: 1px solid #665500;
+                    background-color: #332b00;
+
+                    ._wdt-warn-icon {
+                        position: relative;
+                        display: inline-block;
+                        width: 16px;
+                        height: 16px;
+                        margin: 0 10px 0 0px;
+
+                        svg {
+                            position: absolute;
+                            top: 2px;
+                            fill: #fedc9d;
+                            width: 16px;
+                            height: 16px;
+                        }
+                    }
+                }
+
+                ._wdt-log {
+                    color: #d8d8d8;
+                    border-top: 1px solid #3a3a3a;
+                    border-bottom: 1px solid #3a3a3a;
+                }
+            }// END CONSOLE MESSAGES
+
+            #_wdt-console-input {
+                display: flex;
+                flex-direction: row;
+                flex: 1;
+                min-height: 60px;
+                padding: 10px;
+
+                ._wdt-icon {
+                    margin: 0 7px 0 0;
+                    width: 18px;
+                    height: 18px;
+
+                    svg {
+                        fill: #209cee;
+                        width: 18px;
+                        height: 18px;
+                    }
+                }
+
+                ._wdt-input-wrapper {
+                    flex: 1;
+
+                    ._wdt-input {
+                        width: 100%;
+                        height: 100%;
+                        padding: 2px;
+                        font-size: 16px;
+                        line-height: 16px;
+                        font-family: monospace;
+                        color: #d8d8d8;
+                        background-color: rgba(255,255,255,0);
+                        border: 0;
+                        outline: none;
+                        resize: none;
+                    }
+                }
+            }
+        }// END CONSOLE PAGE.
+
+        // START SOURCE PAGE.
+        #_wdt-sourcePage {
+            flex-direction: row;
+            height: 100%;
+
+            // START SOURCE TREE.
+            #_wdt-source-tree {
+                position: relative;
+                width: 300px;
+                padding: 0.5rem 0;
+                background-color: #333333;
+                color: #d8d8d8;
+                overflow-y: auto;
+                white-space: nowrap;
+
+                ._wdt-row {
+                    position: relative;
+                    cursor: default;
+
+                    ._wdt-icon {
+                        position: relative;
+                        display: inline-block;
+                        width: 18px;
+                        height: 18px;
+                        margin: 0 0.5rem 0 0;
+
+                        svg {
+                            margin-bottom: -2px;
+                            width: 18px;
+                            height: 18px;
+                        }
+                    }
+
+                    ._wdt-open-arrow, ._wdt-close-arrow {
+                        position: absolute;
+                        margin: 1px 0 0 -20px;
+                        width: 18px;
+                        height: 18px;
+                        cursor: pointer;
+
+                        svg {
+                            fill: #aaaaaa;
+                            width: 18px;
+                            height: 18px;
+                        }
+                    }
+
+                    ._wdt-close-arrow {
+                        display: none;
+                    }
+
+                    &._wdt-site {
+                        ._wdt-icon {
+                            svg {
+                                fill: #ffffff;
+                            }
+                        }
+                    }
+
+                    &._wdt-folder {
+                        ._wdt-icon {
+                            svg {
+                                fill: #9bb6c7;
+                            }
+                        }
+                    }
+
+                    &._wdt-file {
+                        ._wdt-icon {
+                            svg {
+                                fill: #d38643;
+                            }
+                        }
+                    }
+
+                    &._wdt-open {
+                        &> ._wdt-open-arrow {
+                            display: none;
+                        }
+                        &> ._wdt-close-arrow {
+                            display: block;
+                        }
+                    }
+
+                    &:hover {
+                        background-color: #252c36;
+                        cursor:default;
+                    }
+                }
+            } // END SOURCE TREE.
+
+            #_wdt-source-resizer {
+                position: relative;
+                height: 100%;
+                width: 1px;
+                background-color: #333333;
+                cursor: ew-resize;
+
+                &:after {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    bottom: 0;
+                    left: 0;
+                    width: 10px;
+                    background-color: rgba(255,255,255,0);
+                    z-index: 9000;
+                }
+            }
+
+            #_wdt-source-code {
+                flex: 1;
+                position: relative;
+                border-left: 1px solid #4c4c4c;
+                overflow: auto;
+            }
+        } // END SOURCE PAGE.
+    }
+}
