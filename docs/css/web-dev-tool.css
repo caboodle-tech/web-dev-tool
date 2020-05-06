@@ -12,6 +12,9 @@
   left: 0;
   right: 0;
   border-top: 1px solid #000;
+  font-family: monospace;
+  font-size: 16px;
+  line-height: 24px;
 }
 #_web-dev-tool #_wdt-tools-resizer {
   position: absolute;
@@ -34,13 +37,14 @@
   border-top: 1px solid #4c4c4c;
   border-bottom: 1px solid #4c4c4c;
   z-index: 5000;
+  font-family: monospace;
 }
 #_web-dev-tool #_wdt-toolbar ._wdt-tab {
   display: inline-block;
-  height: 28px;
-  max-height: 28px;
+  height: 30px;
+  max-height: 30px;
   font-size: 15px;
-  line-height: 28px;
+  line-height: 30px;
   padding: 0 15px;
   overflow: hidden;
   cursor: pointer;
@@ -123,8 +127,8 @@
   bottom: 0;
   overflow-y: auto;
   background-color: #232323;
-  font-family: monospace;
   color: #71aed5;
+  font-family: monospace;
 }
 #_web-dev-tool #_wdt-page ._wdt-hidden {
   display: none;
@@ -132,6 +136,7 @@
 #_web-dev-tool #_wdt-page #_wdt-elementPage {
   flex-direction: column;
   padding: 0.5rem 0.5rem 0.5rem 0;
+  font-family: monospace;
 }
 #_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-open-arrow,
 #_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-close-arrow {
@@ -193,6 +198,7 @@
 #_web-dev-tool #_wdt-page #_wdt-consolePage {
   flex-direction: column;
   height: 100%;
+  font-family: monospace;
 }
 #_web-dev-tool #_wdt-page #_wdt-consolePage a,
 #_web-dev-tool #_wdt-page #_wdt-consolePage a:visited {
@@ -334,6 +340,7 @@
 #_web-dev-tool #_wdt-page #_wdt-sourcePage {
   flex-direction: row;
   height: 100%;
+  font-family: monospace;
 }
 #_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree {
   position: relative;

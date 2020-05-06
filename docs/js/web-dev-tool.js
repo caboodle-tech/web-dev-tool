@@ -1,7 +1,31 @@
+/*!
+ * Web Dev Tool
+ * https://github.com/caboodle-tech/web-dev-tool
+ *
+ * Version: 0.5.11
+ *
+ * Copyright Christopher Keers (Caboodle Tech Inc)
+ * https://github.com/blizzardengle (https://github.com/caboodle-tech)
+ *
+ * Released under the MIT license.
+ * Date: 2020-05-05
+ *
+ * Icons licensed separately:
+ *  - Font Awesome (https://github.com/caboodle-tech/whiteboard/FontAwesomeLicense.md)
+ */
+
+/**
+ * Slimmed down developer tools for headless browsers and embedded web based applications.
+ *
+ * @author Christopher Keers <source@caboodle.tech>
+ * @version 0.5.11
+ */
 var WebDevTool = ( function(){
 
+    // A place to store all the references to the elements we need to add to the page.
     var elems = {};
 
+    // The SVG icons we use in the interface and console messages.
     var icons = {
         caretRight: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path d="M0 384.662V127.338c0-17.818 21.543-26.741 34.142-14.142l128.662 128.662c7.81 7.81 7.81 20.474 0 28.284L34.142 398.804C21.543 411.404 0 402.48 0 384.662z"/></svg>',
         caretDown: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M31.3 192h257.3c17.8 0 26.7 21.5 14.1 34.1L174.1 354.8c-7.8 7.8-20.5 7.8-28.3 0L17.2 226.1C4.6 213.5 13.5 192 31.3 192z"/></svg>',
@@ -14,6 +38,7 @@ var WebDevTool = ( function(){
         terminal: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M257.981 272.971L63.638 467.314c-9.373 9.373-24.569 9.373-33.941 0L7.029 444.647c-9.357-9.357-9.375-24.522-.04-33.901L161.011 256 6.99 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L257.981 239.03c9.373 9.372 9.373 24.568 0 33.941zM640 456v-32c0-13.255-10.745-24-24-24H312c-13.255 0-24 10.745-24 24v32c0 13.255 10.745 24 24 24h304c13.255 0 24-10.745 24-24z"/></svg>'
     };
 
+    // A place to store all the status' and states.
     var status = {
         consoleMethods: [
             'error', 'log', 'warn'
@@ -28,71 +53,400 @@ var WebDevTool = ( function(){
         version: '0.5.11'
     };
 
-    var styles = "#_web-dev-tool{display:none;position:fixed;bottom:0;left:0;right:0;border-top:1px solid #000}#_web-dev-tool #_wdt-toolbar{position:absolute;top:0;left:0;right:0;height:30px;color:#d8d8d8;background-color:#333;padding:0 15px;border-top:1px solid #4c4c4c;border-bottom:1px solid #4c4c4c}#_web-dev-tool #_wdt-toolbar ._wdt-tab{display:inline-block;height:28px;max-height:28px;font-size:15px;line-height:28px;padding:0 15px;overflow:hidden;cursor:pointer}#_web-dev-tool #_wdt-toolbar ._wdt-tab._wdt-active{color:#fff;background-color:#1f1f1f}#_web-dev-tool #_wdt-toolbar ._wdt-tab:hover{color:#fff;background-color:#1f1f1f}#_web-dev-tool #_wdt-toolbar:before{content:'';position:absolute;left:0;right:0;top:-13px;height:15px;background-color:rgba(0,0,0,0);cursor:ns-resize}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts{float:right;display:inline-block;height:28px;line-height:28px;cursor:pointer}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-error-icon{position:relative;display:inline-block}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-error-icon svg{margin-bottom:-2px;fill:#ff8080;width:15px;height:15px}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-warn-icon{position:relative;display:inline-block}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-warn-icon svg{margin-bottom:-2px;fill:#fedc9d;width:15px;height:15px}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-count{display:inline-block;padding:0 10px 0 5px}#_web-dev-tool #_wdt-toolbar #_wdt-version{float:right}#_web-dev-tool #_wdt-toolbar #_wdt-version a,#_web-dev-tool #_wdt-toolbar #_wdt-version a:visited{color:#d8d8d8}#_web-dev-tool #_wdt-toolbar #_wdt-version:hover a{color:#fff}#_web-dev-tool #_wdt-toolbar #_wdt-closeButton{display:flex;align-items:center;float:right;height:28px;max-height:28px;line-height:28px;padding:0 15px;cursor:pointer}#_web-dev-tool #_wdt-toolbar #_wdt-closeButton svg{height:18px;width:18px;fill:#d8d8d8}#_web-dev-tool #_wdt-toolbar #_wdt-closeButton:hover{background-color:#1f1f1f}#_web-dev-tool #_wdt-toolbar #_wdt-closeButton:hover svg{color:#fff}#_web-dev-tool #_wdt-page{position:absolute;top:30px;left:0;right:0;bottom:0;overflow-y:auto;background-color:#232323;font-family:monospace;color:#71aed5}#_web-dev-tool #_wdt-page ._wdt-hidden{display:none}#_web-dev-tool #_wdt-page #_wdt-elementPage{flex-direction:column;padding:.5rem 0}#_web-dev-tool #_wdt-page #_wdt-elementPage .row .open{position:relative;display:inline-block;width:0;height:18px;cursor:pointer}#_web-dev-tool #_wdt-page #_wdt-elementPage .row .open svg{position:absolute;top:4px;left:-18px;fill:#aaa;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-elementPage .row .open:after{content:'';position:absolute;top:0;left:-25px;width:25px;height:25px}#_web-dev-tool #_wdt-page #_wdt-elementPage .row:hover{background-color:#252c36;cursor:default}#_web-dev-tool #_wdt-page #_wdt-elementPage .row.open .more{display:none}#_web-dev-tool #_wdt-page #_wdt-elementPage .attribute{display:inline-block;color:#9bb6c7}#_web-dev-tool #_wdt-page #_wdt-elementPage .value{display:inline-block;color:#d38643}#_web-dev-tool #_wdt-page #_wdt-elementPage .white{display:inline-block;color:#fff}#_web-dev-tool #_wdt-page #_wdt-consolePage{flex-direction:column;height:100%}#_web-dev-tool #_wdt-page #_wdt-consolePage a,#_web-dev-tool #_wdt-page #_wdt-consolePage a:visited{color:#71aed5;text-decoration:none}#_web-dev-tool #_wdt-page #_wdt-consolePage a:hover{text-decoration:underline}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row{display:flex;padding:3px 10px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg{flex:1;text-align:left}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-source{text-align:right}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-consume,#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-error{color:#ff8080;border-top:1px solid #5c0000;border-bottom:1px solid #5c0000;background-color:#290000}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-consume ._wdt-error-icon,#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-error ._wdt-error-icon{position:relative;display:inline-block;width:16px;height:16px;margin:0 10px 0 0}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-consume ._wdt-error-icon svg,#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-error ._wdt-error-icon svg{position:absolute;top:2px;fill:#ff8080;width:16px;height:16px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-warn{color:#fedc9d;border-top:1px solid #650;border-bottom:1px solid #650;background-color:#332b00}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-warn ._wdt-warn-icon{position:relative;display:inline-block;width:16px;height:16px;margin:0 10px 0 0}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-warn ._wdt-warn-icon svg{position:absolute;top:2px;fill:#fedc9d;width:16px;height:16px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-log{color:#d8d8d8;border-top:1px solid #3a3a3a;border-bottom:1px solid #3a3a3a}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input{display:flex;flex-direction:row;flex:1;min-height:60px;padding:10px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input ._wdt-icon{margin:0 7px 0 0;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input ._wdt-icon svg{fill:#209cee;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input ._wdt-input-wrapper{flex:1}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input ._wdt-input-wrapper ._wdt-input{width:100%;height:100%;padding:2px;font-size:16px;line-height:16px;font-family:monospace;color:#d8d8d8;background-color:rgba(255,255,255,0);border:0;outline:0;resize:none}#_web-dev-tool #_wdt-page #_wdt-sourcePage{flex-direction:row;height:100%}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree{position:relative;width:300px;padding:.5rem .5rem .5rem 1.5rem;background-color:#333;color:#d8d8d8;overflow-y:auto;white-space:nowrap}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-close-arrow,#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-open-arrow{position:absolute;left:2px;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-close-arrow svg,#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-open-arrow svg{fill:#aaa;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-close-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-icon{position:relative;display:inline-block;width:18px;height:18px;margin:0 .5rem 0 0}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-icon svg{margin-bottom:-2px;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-site{position:relative;cursor:default}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-site ._wdt-icon svg{fill:#fff}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-site ._wdt-close-arrow,#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-site ._wdt-open-arrow{position:absolute;top:1px;left:-20px}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-site._wdt-open>._wdt-open-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-site._wdt-open>._wdt-close-arrow{display:block}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ul{display:none;margin:0;padding:0}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ul ._wdt-icon{position:relative;display:inline-block;width:18px;height:18px;margin:0 .5rem 0 0}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ul ._wdt-icon svg{margin-bottom:-2px;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ul li{display:block;cursor:default}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ul ._wdt-folder{position:relative;padding:0 0 0 1.5rem}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ul ._wdt-folder ._wdt-icon svg{fill:#9bb6c7}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ul ._wdt-folder._wdt-open>._wdt-open-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ul ._wdt-folder._wdt-open>._wdt-close-arrow{display:block}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ul ._wdt-file{padding:0 0 0 1.5rem}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ul ._wdt-file ._wdt-icon svg{fill:#d38643}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-resizer{height:100%;width:10px;background-color:#333;cursor:ew-resize}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-code{flex:1;position:relative;border-left:1px solid #4c4c4c;overflow:auto}";
+    // Web Dev Tool's styles to be injected into the page.
+    var styles = "";
 
-    var textContent = [ 'a', 'abbr', 'acronym', 'b', 'cite', 'del', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'i', 'kbd', 'label', 'li', 'mark', 'progress', 'q', 's', 'samp', 'small', 'span', 'strong', 'time', 'u', 'var', 'wbr' ];
+    // HTML elements that will receive text (white) highlighting on the Elements page.
+    var textContent = [ 'a', 'abbr', 'acronym', 'b', 'cite', 'del', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'i', 'kbd', 'label', 'li', 'mark', 'p', 'progress', 'q', 's', 'samp', 'small', 'span', 'strong', 'time', 'u', 'var', 'wbr' ];
 
+    // A place to store the HTML that made up this page before Web Dev Tool was injected.
     var pageHTML = '';
 
-    var showSources = function(){
-
-        var sources = getSources();
-
-        var html = '';
-
-        sources.__sites.forEach( function( site ){
-
-            var prepend = '';
-
-            html += '<div data-depth="2" class="_wdt-row _wdt-site" style="padding-left: 30px;"><div class="_wdt-open-arrow">' + icons.caretRight + '</div><div class="_wdt-close-arrow">' + icons.caretDown + '</div><div class="_wdt-icon">' + icons.cloud + '</div>' + site + '</div>';
-
-            sources[ site ].__files.forEach( function( file ){
-                prepend += '<div data-depth="3" data-url="' + file[1] + '" class="_wdt-row _wdt-file" style="padding-left: 45px; display: none;"><div class="_wdt-icon">' + icons.file + '</div>' + file[0] + '</div>';
-            } );
-
-            sources[ site ].__dirs.forEach( function( dir ) {
-                html += '<div data-depth="3" class="_wdt-row _wdt-folder" style="padding-left: 45px; display: none;"><div class="_wdt-open-arrow">' + icons.caretRight + '</div><div class="_wdt-close-arrow">' + icons.caretDown + '</div><div class="_wdt-icon">' + icons.folder + '</div>' + dir + '</div>';
-                html += rcd( sources[ site ][ dir ], '', 4 );
-            } );
-
-            html += prepend;
-
+    /**
+     * When we build the HTML for the Elements page the head and body tags are hidden, unhide them.
+     */
+    var activateElements = function(){
+        var unhide = elems.elementPage.querySelectorAll('[data-depth="2"] ._wdt-open-arrow');
+        unhide.forEach( function( item ){
+            item.parentElement.style.display = 'block';
         } );
-
-        elems.sourceTree.innerHTML = html;
-
-        attachSourceTreeListeners();
     };
 
-    var rcd = function( obj, merge, level ){
+    /**
+     * Web Dev Tool is injected very early so print to the console any saved messages.
+     */
+    var addConsoleStack = function(){
+        status.consoleStack.forEach( function( item ){
+            elems.consoleMessages.appendChild( item );
+        } );
+        status.consoleStack = [];
+    };
 
-        var html = '';
-        var prepend = '';
+    /**
+     * Add all the HTML elements for Web Dev Tool to the page.
+     */
+    var addTools = function(){
 
-        obj.__files.forEach( function( file ){
-            prepend += '<div data-depth="' + level + '" data-url="' + file[1] + '" class="_wdt-row _wdt-file" style="padding-left: ' + ( level * 15 )+ 'px; display: none;"><div class="_wdt-icon">' + icons.file + '</div>' + file[0] + '</div>';
+        // Add our stylesheet to the page.
+        elems.style = document.createElement('STYLE');
+        elems.style.innerText = styles;
+
+        // Add the dev tools container.
+        elems.tools = document.createElement('DIV');
+        elems.tools.id = '_web-dev-tool';
+        elems.body.appendChild( elems.style );
+        elems.body.appendChild( elems.tools );
+
+        // Add a resizing bar for the Tools.
+        elems.toolsResizer = document.createElement('DIV');
+        elems.toolsResizer.id = "_wdt-tools-resizer";
+        elems.tools.appendChild( elems.toolsResizer );
+
+        // Add the top (tab bar) and bottom (page) areas.
+        elems.toolbar = document.createElement('DIV');
+        elems.toolbar.id = "_wdt-toolbar";
+        elems.tools.appendChild( elems.toolbar );
+        elems.page = document.createElement('DIV');
+        elems.page.id = "_wdt-page";
+        elems.tools.appendChild( elems.page );
+
+        // Add the Elements tab.
+        elems.elementTab = document.createElement('DIV');
+        elems.elementTab.id = "_wdt-elementTab";
+        elems.elementTab.dataset.page = "_wdt-elementPage";
+        elems.elementTab.classList.add('_wdt-tab');
+        elems.elementTab.classList.add('_wdt-active');
+        elems.elementTab.innerHTML = 'Elements';
+        elems.toolbar.appendChild( elems.elementTab );
+
+        // Add the Elements page.
+        elems.elementPage = document.createElement('DIV');
+        elems.elementPage.id = "_wdt-elementPage";
+        elems.elementPage.classList.add('_wdt-page');
+        elems.elementPage.innerHTML = pageHTML;
+        elems.page.appendChild( elems.elementPage );
+
+        // Unhide the head and body element rows in our console.
+        activateElements();
+
+        // Add the Console tab.
+        elems.consoleTab = document.createElement('DIV');
+        elems.consoleTab.id = "_wdt-consoleTab";
+        elems.consoleTab.dataset.page = "_wdt-consolePage";
+        elems.consoleTab.classList.add('_wdt-tab');
+        elems.consoleTab.innerHTML = 'Console';
+        elems.toolbar.appendChild( elems.consoleTab );
+
+        // Add the Console page.
+        elems.consolePage = document.createElement('DIV');
+        elems.consolePage.id = "_wdt-consolePage";
+        elems.consolePage.classList.add('_wdt-page');
+        elems.consolePage.classList.add('_wdt-hidden');
+        elems.page.appendChild( elems.consolePage );
+
+        // Add the Console message area to the console page.
+        elems.consoleMessages = document.createElement('DIV');
+        elems.consoleMessages.id = '_wdt-console-messages';
+        elems.consolePage.appendChild( elems.consoleMessages );
+
+        // Add the Console input area to the console page.
+        elems.consoleInputArea = document.createElement('DIV');
+        elems.consoleInputArea.id = '_wdt-console-input';
+        elems.consolePage.appendChild( elems.consoleInputArea );
+
+        // Add the actual Console input in a lazy way and then keep a reference to it.
+        var html = '<div class="_wdt-icon">' + icons.terminal + '</div>';
+        html += '<div class="_wdt-input-wrapper"><textarea class="_wdt-input"></textarea>';
+        elems.consoleInputArea.innerHTML = html;
+        elems.consoleInput = elems.consoleInputArea.querySelector('textarea');
+
+        // Add the Source tab.
+        elems.sourceTab = document.createElement('DIV');
+        elems.sourceTab.id = "_wdt-sourceTab";
+        elems.sourceTab.dataset.page = "_wdt-sourcePage";
+        elems.sourceTab.classList.add('_wdt-tab');
+        elems.sourceTab.innerHTML = 'Sources';
+        elems.toolbar.appendChild( elems.sourceTab );
+
+        // Add the Source page.
+        elems.sourcePage = document.createElement('DIV');
+        elems.sourcePage.id = "_wdt-sourcePage";
+        elems.sourcePage.classList.add('_wdt-page');
+        elems.sourcePage.classList.add('_wdt-hidden');
+        elems.page.appendChild( elems.sourcePage );
+
+        // Add the Source tree area to the Source page.
+        elems.sourceTree = document.createElement('DIV');
+        elems.sourceTree.id = "_wdt-source-tree";
+        elems.sourcePage.appendChild( elems.sourceTree );
+
+        // Add a resizing bar for the Source tree.
+        elems.sourceResizer = document.createElement('DIV');
+        elems.sourceResizer.id = "_wdt-source-resizer";
+        elems.sourcePage.appendChild( elems.sourceResizer );
+
+        // Add the Source code area of the Source page.
+        elems.sourceCode = document.createElement('DIV');
+        elems.sourceCode.id = "_wdt-source-code";
+        elems.sourcePage.appendChild( elems.sourceCode );
+
+        // Add the close button to the toolbar.
+        elems.closeButton = document.createElement('DIV');
+        elems.closeButton.id = '_wdt-closeButton';
+        elems.closeButton.innerHTML = icons.close;
+        elems.toolbar.appendChild( elems.closeButton );
+
+        // Add the version to the toolbar.
+        elems.version = document.createElement('DIV');
+        elems.version.id = '_wdt-version';
+        elems.version.classList.add('_wdt-tab');
+        elems.version.innerHTML = 'Ver. '+ status.version;
+        elems.toolbar.appendChild( elems.version );
+
+        // Add the Console error and warning counts to the toolbar.
+        elems.consoleCounts = document.createElement('DIV');
+        elems.consoleCounts.id = '_wdt-console-counts';
+        elems.toolbar.appendChild( elems.consoleCounts );
+    };
+
+    /**
+     * Hook up all the event listeners Web Dev Tool needs. Some listeners
+     * will call other functions to handle the event and some will be
+     * handled by anonymous functions created here.
+     */
+    var attachListeners = function(){
+
+        // Turn on the Tools resize bar.
+        elems.toolsResizer.addEventListener( 'mousedown', nsResizeStart.bind( null, elems.toolsResizer, resizeWebTools ) );
+
+        // Hook up all the tab buttons in the toolbar.
+        elems.elementTab.addEventListener( 'click', changeTab );
+        elems.consoleTab.addEventListener( 'click', changeTab );
+        elems.sourceTab.addEventListener( 'click', changeTab );
+
+        // Hook up all the info or control buttons in the toolbar.
+        elems.version.addEventListener( 'click', versionMessage );
+        elems.closeButton.addEventListener( 'click', closeTools );
+        elems.consoleCounts.addEventListener( 'click', function(){
+            elems.consoleTab.click();
         } );
 
-        obj.__dirs.forEach( function( dir ) {
-            if( obj[ dir ].__files.length < 1 ){
-                html += rcd( obj[ dir ], dir + '/', level );
-            } else {
-                html += '<div data-depth="' + level + '" class="_wdt-row _wdt-folder" style="padding-left: ' + ( level * 15 )+ 'px; display: none;"><div class="_wdt-open-arrow">' + icons.caretRight + '</div><div class="_wdt-close-arrow">' + icons.caretDown + '</div><div class="_wdt-icon">' + icons.folder + '</div>' + merge + dir + '</div>';
-                html += rcd( obj[ dir ], '', level + 1 );
+        // Monitor and respond to key presses when the Console input has focus.
+        elems.consoleInputArea.querySelector('textarea').addEventListener( 'keyup', respondToConsole );
+        elems.consoleInputArea.querySelector('textarea').addEventListener( 'keydown', function(){
+            if( event.key != 'Enter' ){
+                status.previousKey = event.key;
+            }
+            if( event.key == 'Enter' ){
+                // Don't let enter place a newline into the command on submission.
+                event.preventDefault();
             }
         } );
 
-        return prepend + html;
+        // Turn on the Source tree resize bar.
+        elems.sourceResizer.addEventListener( 'mousedown', ewResizeStart.bind( null, elems.sourceResizer, resizeSourceTree ) );
+
+        // Add a listener to all rows on the Elements page.
+        var openArrows = elems.elementPage.querySelectorAll('._wdt-row ._wdt-open-arrow');
+        openArrows.forEach( function( item ){
+            item.addEventListener( 'click', toggleElement );
+        } );
+        var closeArrows = elems.elementPage.querySelectorAll('._wdt-row ._wdt-close-arrow');
+        closeArrows.forEach( function( item ){
+            item.addEventListener( 'click', toggleElement );
+        } );
+
+        // Listen for the open and close commands.
+        document.addEventListener( 'keydown', toggleDevTools );
     };
 
+    /**
+     * Once the Source tree has been created add listeners to make it interactive.
+     */
+    var attachSourceTreeListeners = function(){
+
+        var sites = elems.sourceTree.querySelectorAll('._wdt-site');
+        sites.forEach( function( item ){
+            item.addEventListener( 'click', toggleRow );
+        } );
+
+        var folders = elems.sourceTree.querySelectorAll('._wdt-folder');
+        folders.forEach( function( item ){
+            item.addEventListener( 'click', toggleRow );
+        } );
+
+        var files = elems.sourceTree.querySelectorAll('._wdt-file');
+        files.forEach( function( item ){
+            item.addEventListener( 'click', loadSource );
+        } );
+    };
+
+    /**
+     * Switch pages based on which tab was clicked on.
+     */
+    var changeTab = function(){
+
+        var elem = event.target || event.srcElement;
+        if( ! elem.classList.contains('_wdt-tab') ){
+            elem = elem.closest('._wdt-tab');
+        }
+        var activeTab = elems.toolbar.querySelector('._wdt-active');
+
+        // Switch the active element with the _wdt-active class.
+        activeTab.classList.remove('_wdt-active');
+        elem.classList.add('_wdt-active');
+
+        // Switch the active page now.
+        document.getElementById( activeTab.dataset.page ).classList.add( '_wdt-hidden' );
+        document.getElementById( activeTab.dataset.page ).style.display = 'none';
+        document.getElementById( elem.dataset.page ).classList.remove( '_wdt-hidden' );
+        document.getElementById( elem.dataset.page ).style.display = 'flex';
+
+        // If we switched to the console make sure its at the bottom.
+        if( elem.dataset.page == '_wdt-consolePage' ){
+            scrollConsole();
+        }
+    };
+
+    /**
+     * Close the dev tools.
+     */
+    var closeTools = function(){
+        elems.tools.style.display = 'none';
+        var height = document.documentElement.clientHeight;
+        document.documentElement.style.overflowY = 'auto';
+        document.body.style.maxHeight = height + 'px';
+    };
+
+    /**
+     * Generic function to allow East West resizing of an element.
+     * Triggered when the user clicks down on the resizing element.
+     *
+     * @param  {Element}  elem     The Element that we are resizing.
+     * @param  {Function} callback The function to call that does the actual work.
+     */
+    var ewResizeStart = function( elem, callback ){
+        elem.dataset.resizing = true;
+        status.resizeElement = elem;
+        status.resizeCallback = callback;
+        document.addEventListener( 'mousemove', nsResizing );
+        document.addEventListener( 'mouseup', nsResizeStop );
+        event.preventDefault();
+    };
+
+    /**
+     * Generic function to allow East West resizing of an element.
+     * Triggered when the user releases the down click on the resizing element.
+     *
+     * @param  {Element}  elem     The Element that we are resizing.
+     * @param  {Function} callback The function to call that does the actual work.
+     */
+    var ewResizeStop = function( elem, callback ){
+        if( status.resizeElement != null ){
+            // Clear the listeners so we don't polute memory.
+            document.removeEventListener( 'mousemove', nsResizing );
+            document.removeEventListener( 'mouseup', nsResizeStop );
+            status.resizeElement.dataset.resizing = false;
+            status.resizeElement = null;
+            status.resizeCallback = null;
+            event.preventDefault();
+        }
+    };
+
+    /**
+     * Generic function to allow East West resizing of an element.
+     * Triggered as the user drags the mouse East and West.
+     *
+     * @param  {Element}  elem     The Element that we are resizing.
+     * @param  {Function} callback The function to call that does the actual work.
+     */
+    var ewResizing = function( elem, callback ){
+        if( status.resizeElement.dataset.resizing == 'true' ){
+            status.resizeCallback( event );
+            event.preventDefault();
+        }
+    };
+
+    /**
+    * Turn the pages HTML into strings and then reproduces the layout
+    * into collapsible rows for the Elements page.
+     *
+     * @return {HTML} The rows that make up the document for the Elements page.
+     */
+    var getPageElements = function(){
+
+        // Build the doctype tag.
+        var html = '___R[1]___<!doctype ' + document.doctype.name;
+        if( document.doctype.publicId ){
+            html += ' PUBLIC "' + document.doctype.publicId + '"';
+        } else if ( document.doctype.systemId ) {
+            html += ' SYSTEM "' + document.doctype.systemId + '"';
+        }
+
+        // Add the opening HTML element.
+        html += '>___/R______R[1]___<html>___/R___';
+
+        // Recursively build the head and body of the page.
+        var page = document.documentElement.children;
+        for( var x = 0; x < page.length; x++ ){
+            html += recursiveElements( page[x], 2, textContent );
+        }
+
+        // Add the closing HTML element.
+        html += '___R[1]___</html>___/R___';
+
+        // How many pixles a tab is worth; each level is "tabbed" in based on it's depth.
+        var pad = 15;
+
+        // Replace all < and > with their HTML entity so the page doesn't treat this as actual HTML.
+        html = html.replace( /</g, '&lt;' ).replace( />/g, '&gt;');
+
+        // Wrap all HTML attributes in key value paired divs so we can color highlight them.
+        html = html.replace( /([\w\d\-_]*?)="([\w\d\s\/\.=\-&_,;:]*?)"/g, '<div class="attribute">$1</div>="<div class="value">$2</div>"' );
+
+        // Replace all row start tags (___R___) with the row div and appropriate padding for this rows depth.
+        html = html.replace( /___R\[([0-9]*?)\]___/g, function( match, depth ){
+            if( depth > 1 ){
+                return '<div class="_wdt-row" data-depth="' + depth + '" style="padding-left: ' + ( pad * depth ) + 'px; display:none;">';
+            } else {
+                return '<div class="_wdt-row" data-depth="' + depth + '" style="padding-left: ' + ( pad * depth ) + 'px;">';
+            }
+        } );
+
+        // Replace all closing row tags (___/R___) with the end of row div.
+        html = html.replace( /___\/R___/g, '</div>' );
+        // Replace all arrow tags (___A___) with the open and close divs.
+        html = html.replace( /___A___/g, '<div class="_wdt-open-arrow">' + icons.caretRight + '</div><div class="_wdt-close-arrow">' + icons.caretDown + '</div>' );
+        // Replace all ellipses tags (___E___) with the more div followed by the appropriate closing tag.
+        html = html.replace( /___E\[(.*?)\]___/g, function( match, tag ){
+            return '<span class="more">...&lt;/' + tag + '&gt;</span>';
+        } );
+        // Not every ellipses tag belongs to an element that needed a closing tag so replace what we missed.
+        html = html.replace( /___E___/g, '<span class="more">...</span>' );
+        // Replace all line break tags (___B___) with an HTML line break.
+        html = html.replace( /___B___/g, '<br>' );
+        // Replace all text content tags (___T___) with the opening text content div.
+        html = html.replace( /___T___/g, '<div class="white">' );
+        // Replace all closing text content tags (___/T___) with the closing text content div.
+        html = html.replace( /___\/T___/g, '</div>' );
+
+        // Send the result back.
+        return html;
+    };
+
+    /**
+     * Build the Source tree as an array of nested array objects.
+     */
     var getSources = function(){
 
+        // The start of the "tree".
         var sources = {
             '__sites': []
         };
 
         var site, path, backref;
 
+        // Loop through every resource the page loaded and place it in the tree.
         var resources = window.performance.getEntriesByType("resource");
         resources.forEach( function ( resource ) {
 
@@ -100,7 +454,7 @@ var WebDevTool = ( function(){
             site = resource.name.match( /\/\/(.*?)\// );
             site = site[1].replace( /\//g, '' );
 
-            // Add this site to our root if it has not be added already.
+            // Add this site to our root if it has not been added already.
             if( ! sources.__sites.includes( site ) ){
                 sources.__sites.push( site );
                 sources[ site ] = {
@@ -109,7 +463,7 @@ var WebDevTool = ( function(){
                 };
             }
 
-            // Get the path to this resource.
+            // Get the path to this resource; remove and parameters added to the URL.
             path = resource.name.replace( /.*?\/\/.*?\//, '' );
             if( path.indexOf( '#' ) > -1 ){
                 path = path.substr( 0, path.indexOf( '#' ) );
@@ -123,8 +477,9 @@ var WebDevTool = ( function(){
             path.forEach( function( item, index ) {
                 // Is this the file or a directory?
                 if( (index + 1) != path.length ){
-                    // Directory.
+                    // Directory. We combine empty directories so do not make a new branch if this is empty.
                     if( backref ){
+                        // Add this new directory to the back reference (pervious nested array; "node") if it hasn't been added already.
                         if( ! backref.__dirs.includes( item ) ){
                             backref.__dirs.push( item );
                             backref[ item ] = {
@@ -132,8 +487,10 @@ var WebDevTool = ( function(){
                                 '__files': []
                             };
                         }
+                        // Keep track of the back reference (pervious nested array; "node").
                         backref = backref[ item ];
                     } else {
+                        // Add this new directory if it hasn't been added already.
                         if( ! sources[ site ].__dirs.includes( item ) ){
                             sources[ site ].__dirs.push( item );
                             sources[ site ][ item ] = {
@@ -141,6 +498,7 @@ var WebDevTool = ( function(){
                                 '__files': []
                             };
                         }
+                        // Keep track of the back reference (pervious nested array; "node").
                         backref = sources[ site ][ item ];
                     }
                 } else {
@@ -160,184 +518,217 @@ var WebDevTool = ( function(){
         return sources;
     };
 
-    var addConsoleStack = function(){
-        status.consoleStack.forEach( function( item ){
-            elems.consoleMessages.appendChild( item );
-        } );
-        status.consoleStack = [];
+    /**
+     * Turn on the lights once the DOM has finished loading.
+     */
+    var initialize = function(){
+        pageHTML = getPageElements();
+        elems.body = document.body;
+        addTools();
+        attachListeners();
+        addConsoleStack();
+        updateConsoleCounts();
+        showSources();
     };
 
-    var addTools = function(){
-        // Add our stylesheet to the page.
-        elems.style = document.createElement('STYLE');
-        //elems.style.innerText = styles;
+    /**
+     * Load the source code for the selected file and display it in the Source code area.
+     */
+    var loadSource = function(){
 
-        // Add the dev tools to the page.
-        elems.tools = document.createElement('DIV');
-        elems.tools.id = '_web-dev-tool';
-        elems.body.appendChild( elems.style );
-        elems.body.appendChild( elems.tools );
+        event.preventDefault();
 
-        elems.toolsResizer = document.createElement('DIV');
-        elems.toolsResizer.id = "_wdt-tools-resizer";
-        elems.tools.appendChild( elems.toolsResizer );
+        var elem = event.target || event.srcElement;
+        if( ! elem.classList.contains('_wdt-file') ){
+            elem = elem.closest('._wdt-file');
+        }
 
-        // Add the top (tab bar) and bottom (page) areas.
-        elems.toolbar = document.createElement('DIV');
-        elems.toolbar.id = "_wdt-toolbar";
-        elems.tools.appendChild( elems.toolbar );
-        elems.page = document.createElement('DIV');
-        elems.page.id = "_wdt-page";
-        elems.tools.appendChild( elems.page );
-        // Add the elements tab and page.
-        elems.elementTab = document.createElement('DIV');
-        elems.elementTab.id = "_wdt-elementTab";
-        elems.elementTab.dataset.page = "_wdt-elementPage";
-        elems.elementTab.classList.add('_wdt-tab');
-        elems.elementTab.classList.add('_wdt-active');
-        elems.elementTab.innerHTML = 'Elements';
-        elems.toolbar.appendChild( elems.elementTab );
-        elems.elementPage = document.createElement('DIV');
-        elems.elementPage.id = "_wdt-elementPage";
-        elems.elementPage.classList.add('_wdt-page');
-        elems.elementPage.innerHTML = pageHTML;
-        elems.page.appendChild( elems.elementPage );
+        // Do not continue unless we have a URL to load.
+        if( elem.dataset.url ){
 
-        // Unhide the head and body element rows in our console.
-        var unhide = elems.elementPage.querySelectorAll('[data-depth="2"] ._wdt-open-arrow');
-        unhide.forEach( function( item ){
-            item.parentElement.style.display = 'block';
-        } );
+            // Is this file on our current domain?
+            if( elem.dataset.url.indexOf( window.location ) > -1 ){
 
-        // Add the console tab and page.
-        elems.consoleTab = document.createElement('DIV');
-        elems.consoleTab.id = "_wdt-consoleTab";
-        elems.consoleTab.dataset.page = "_wdt-consolePage";
-        elems.consoleTab.classList.add('_wdt-tab');
-        elems.consoleTab.innerHTML = 'Console';
-        elems.toolbar.appendChild( elems.consoleTab );
+                // Yes. Load the source code.
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function(){
 
-        elems.consolePage = document.createElement('DIV');
-        elems.consolePage.id = "_wdt-consolePage";
-        elems.consolePage.classList.add('_wdt-page');
-        elems.consolePage.classList.add('_wdt-hidden');
-        elems.page.appendChild( elems.consolePage );
+                    // Wait until the request has finished then process the response.
+                    if ( this.readyState === 4 && this.status === 200 ) {
 
-        elems.consoleMessages = document.createElement('DIV');
-        elems.consoleMessages.id = '_wdt-console-messages';
-        elems.consoleInput = document.createElement('DIV');
-        elems.consoleInput.id = '_wdt-console-input';
-        elems.consolePage.appendChild( elems.consoleMessages );
-        elems.consolePage.appendChild( elems.consoleInput );
+                        // Take the response and alter it to display properly as a string, don't let the browser treat it as HTML.
+                        var html = xhr.responseText;
+                        html = html.replace( /</g, '&lt;' );
+                        html = html.replace( />/g, '&gt;' );
+                        html = html.replace( /\n/g, '<br>' );
+                        html = html.replace( /\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;' );
+                        html = html.replace( / /g, '&nbsp;' );
 
-        var html = '<div class="_wdt-icon">' + icons.terminal + '</div>';
-        html += '<div class="_wdt-input-wrapper"><textarea class="_wdt-input"></textarea>';
-        elems.consoleInput.innerHTML = html;
+                        // Show the user the code.
+                        elems.sourceCode.innerHTML = html;
+                    }
 
-        // Add the source tab and page.
-        elems.sourceTab = document.createElement('DIV');
-        elems.sourceTab.id = "_wdt-sourceTab";
-        elems.sourceTab.dataset.page = "_wdt-sourcePage";
-        elems.sourceTab.classList.add('_wdt-tab');
-        elems.sourceTab.innerHTML = 'Sources';
-        elems.toolbar.appendChild( elems.sourceTab );
+                    if( this.readyState === 4 && this.status >= 400 ){
+                        // TODO: log an error to our console and put a message into the source code area.
+                    };
+                };
 
-        elems.sourcePage = document.createElement('DIV');
-        elems.sourcePage.id = "_wdt-sourcePage";
-        elems.sourcePage.classList.add('_wdt-page');
-        elems.sourcePage.classList.add('_wdt-hidden');
+                // Send the request.
+                xhr.open( 'GET', elem.dataset.url, true );
+                xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                xhr.send();
 
-        elems.sourceTree = document.createElement('DIV');
-        elems.sourceTree.id = "_wdt-source-tree";
-        elems.sourcePage.appendChild( elems.sourceTree );
-
-        elems.sourceResizer = document.createElement('DIV');
-        elems.sourceResizer.id = "_wdt-source-resizer";
-        elems.sourcePage.appendChild( elems.sourceResizer );
-
-        elems.sourceCode = document.createElement('DIV');
-        elems.sourceCode.id = "_wdt-source-code";
-        elems.sourcePage.appendChild( elems.sourceCode );
-
-
-
-        elems.page.appendChild( elems.sourcePage );
-        // Add the close button.
-        elems.closeButton = document.createElement('DIV');
-        elems.closeButton.id = '_wdt-closeButton';
-        elems.closeButton.innerHTML = icons.close;
-        elems.toolbar.appendChild( elems.closeButton );
-        // Add the version.
-        elems.version = document.createElement('DIV');
-        elems.version.id = '_wdt-version';
-        elems.version.classList.add('_wdt-tab');
-        elems.version.innerHTML = 'Ver. '+ status.version;
-        elems.toolbar.appendChild( elems.version );
-        // Add the console counts.
-        elems.consoleCounts = document.createElement('DIV');
-        elems.consoleCounts.id = '_wdt-console-counts';
-        elems.toolbar.appendChild( elems.consoleCounts );
-    };
-
-    var attachListeners = function(){
-
-
-        elems.elementTab.addEventListener( 'click', changeTab );
-        elems.consoleTab.addEventListener( 'click', changeTab );
-        elems.sourceTab.addEventListener( 'click', changeTab );
-
-        elems.version.addEventListener( 'click', versionMessage );
-
-        elems.closeButton.addEventListener( 'click', closeTools );
-
-        elems.consoleCounts.addEventListener( 'click', function(){
-            elems.consoleTab.click();
-        } );
-
-        elems.consoleInput.querySelector('textarea').addEventListener( 'keyup', respondToConsole );
-        elems.consoleInput.querySelector('textarea').addEventListener( 'keydown', function(){
-            if( event.key != 'Enter' ){
-                status.previousKey = event.key;
+            } else {
+                // No. Show the CORS warning.
+                elems.sourceCode.innerHTML = 'The source code for this file can not be loaded because of CORS. This is a browser limitation and not a limitaion of Web Dev Tools.';
             }
-            if( event.key == 'Enter' ){
-                // Don't let enter place a newline into the command on submission.
-                event.preventDefault();
+        }
+    };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    var showSources = function(){
+
+        var sources = getSources();
+
+        var html = '';
+
+        sources.__sites.forEach( function( site ){
+
+            var prepend = '';
+
+            html += '<div data-depth="2" class="_wdt-row _wdt-site" style="padding-left: 30px;"><div class="_wdt-open-arrow">' + icons.caretRight + '</div><div class="_wdt-close-arrow">' + icons.caretDown + '</div><div class="_wdt-icon">' + icons.cloud + '</div>' + site + '</div>';
+
+            sources[ site ].__files.forEach( function( file ){
+                prepend += '<div data-depth="3" data-url="' + file[1] + '" class="_wdt-row _wdt-file" style="padding-left: 45px; display: none;"><div class="_wdt-icon">' + icons.file + '</div>' + file[0] + '</div>';
+            } );
+
+            sources[ site ].__dirs.forEach( function( dir ) {
+                html += '<div data-depth="3" class="_wdt-row _wdt-folder" style="padding-left: 45px; display: none;"><div class="_wdt-open-arrow">' + icons.caretRight + '</div><div class="_wdt-close-arrow">' + icons.caretDown + '</div><div class="_wdt-icon">' + icons.folder + '</div>' + dir + '</div>';
+                html += showSourcesRecursive( sources[ site ][ dir ], '', 4 );
+            } );
+
+            html += prepend;
+
+        } );
+
+        elems.sourceTree.innerHTML = html;
+
+        attachSourceTreeListeners();
+    };
+
+    var showSourcesRecursive = function( obj, merge, level ){
+
+        var html = '';
+        var prepend = '';
+
+        obj.__files.forEach( function( file ){
+            prepend += '<div data-depth="' + level + '" data-url="' + file[1] + '" class="_wdt-row _wdt-file" style="padding-left: ' + ( level * 15 )+ 'px; display: none;"><div class="_wdt-icon">' + icons.file + '</div>' + file[0] + '</div>';
+        } );
+
+        obj.__dirs.forEach( function( dir ) {
+            if( obj[ dir ].__files.length < 1 ){
+                html += showSourcesRecursive( obj[ dir ], dir + '/', level );
+            } else {
+                html += '<div data-depth="' + level + '" class="_wdt-row _wdt-folder" style="padding-left: ' + ( level * 15 )+ 'px; display: none;"><div class="_wdt-open-arrow">' + icons.caretRight + '</div><div class="_wdt-close-arrow">' + icons.caretDown + '</div><div class="_wdt-icon">' + icons.folder + '</div>' + merge + dir + '</div>';
+                html += showSourcesRecursive( obj[ dir ], '', level + 1 );
             }
         } );
 
-        elems.toolsResizer.addEventListener( 'mousedown', nsResizeStart.bind( null, elems.toolsResizer, resizeWebTools ) );
-
-        elems.sourceResizer.addEventListener( 'mousedown', ewResizeStart.bind( null, elems.sourceResizer, resizeSourceTree ) );
-
-        // Add a listener to all rows in our consoles elements page.
-        var openArrows = elems.elementPage.querySelectorAll('._wdt-row ._wdt-open-arrow');
-        openArrows.forEach( function( item ){
-            item.addEventListener( 'click', toggleElement );
-        } );
-        var closeArrows = elems.elementPage.querySelectorAll('._wdt-row ._wdt-close-arrow');
-        closeArrows.forEach( function( item ){
-            item.addEventListener( 'click', toggleElement );
-        } );
-
-        // Listen for the open and close commands.
-        document.addEventListener( 'keydown', toggleDevTools );
-    };
-
-    var attachSourceTreeListeners = function(){
-        var sites = elems.sourceTree.querySelectorAll('._wdt-site');
-        sites.forEach( function( item ){
-            item.addEventListener( 'click', toggleRow );
-        } );
-
-        var folders = elems.sourceTree.querySelectorAll('._wdt-folder');
-        folders.forEach( function( item ){
-            item.addEventListener( 'click', toggleRow );
-        } );
-
-        var files = elems.sourceTree.querySelectorAll('._wdt-file');
-        files.forEach( function( item ){
-            item.addEventListener( 'click', loadSource );
-        } );
+        return prepend + html;
     };
 
     var toggleRow = function(){
@@ -374,46 +765,6 @@ var WebDevTool = ( function(){
                     current.style.display = 'block';
                 }
                 current = current.nextElementSibling;
-            }
-        }
-    };
-
-    var loadSource = function(){
-        event.preventDefault();
-
-        var elem = event.target || event.srcElement;
-        if( ! elem.classList.contains('_wdt-file') ){
-            elem = elem.closest('._wdt-file');
-        }
-
-        if( elem.dataset.url ){
-
-            if( elem.dataset.url.indexOf( window.location ) > -1 ){
-
-                var xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = function(){
-                    // Wait until the request has finished then process the response.
-                    if ( this.readyState === 4 && this.status === 200 ) {
-                        var html = xhr.responseText;
-                        html = html.replace( /</g, '&lt;' );
-                        html = html.replace( />/g, '&gt;' );
-                        html = html.replace( /\n/g, '<br>' );
-                        html = html.replace( /\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;' );
-                        html = html.replace( / /g, '&nbsp;' );
-                        elems.sourceCode.innerHTML = html;
-                    }
-
-                    if( this.readyState === 4 && this.status >= 400 ){
-
-                    };
-                };
-
-                // Send the request.
-                xhr.open( 'GET', elem.dataset.url, true );
-                xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                xhr.send();
-            } else {
-                elems.sourceCode.innerHTML = 'The source code for this file can not be loaded because of CORS. This is a browser limitation and not a limitaion of Web Dev Tools.';
             }
         }
     };
@@ -497,110 +848,6 @@ var WebDevTool = ( function(){
             }
         }
     };
-
-    var changeTab = function(){
-        var elem = event.target || event.srcElement;
-        var activeTab = elems.toolbar.querySelector('._wdt-active');
-
-        activeTab.classList.remove('_wdt-active');
-        elem.classList.add('_wdt-active');
-
-        document.getElementById( activeTab.dataset.page ).classList.add( '_wdt-hidden' );
-        document.getElementById( activeTab.dataset.page ).style.display = 'none';
-        document.getElementById( elem.dataset.page ).classList.remove( '_wdt-hidden' );
-        document.getElementById( elem.dataset.page ).style.display = 'flex';
-
-        if( elem.dataset.page == '_wdt-consolePage' ){
-            scrollConsole();
-        }
-    };
-
-    var closeTools = function(){
-        elems.tools.style.display = 'none';
-        var height = document.documentElement.clientHeight;
-        document.documentElement.style.overflowY = 'auto';
-        document.body.style.maxHeight = height + 'px';
-    };
-
-    var getPageElements = function(){
-        var html = '___R[1]___<!doctype ' + document.doctype.name;
-        if( document.doctype.publicId ){
-            html += ' PUBLIC "' + document.doctype.publicId + '"';
-        } else if ( document.doctype.systemId ) {
-            html += ' SYSTEM "' + document.doctype.systemId + '"';
-        }
-        html += '>___/R______R[1]___<html>___/R___';
-
-        var page = document.documentElement.children;
-        for( var x = 0; x < page.length; x++ ){
-            html += recursiveElements( page[x], 2, textContent );
-        }
-
-        html += '___R[1]___</html>___/R___';
-
-
-
-        var pad = 15;
-
-        html = html.replace( /</g, '&lt;' ).replace( />/g, '&gt;');
-        //html = html.replace( /___\/R___/g, '___/R___<br>' );
-
-        //html = html.replace( /([\w\d\-_]*?)="([\w\d\s\/\.=\-&_,;:]*?)"/g, '___AA___$1___/A______V___$2___/V___' );
-        html = html.replace( /([\w\d\-_]*?)="([\w\d\s\/\.=\-&_,;:]*?)"/g, '<div class="attribute">$1</div>="<div class="value">$2</div>"' );
-        //html = html.replace( /="([\w\d\s\/\.;:]*?)"/g, '___V___$1___/V___"' );
-
-
-
-        //html = html.replace( /___ROW\[([0-9]*?)\]___/g,  ) + 'px;">' );
-        html = html.replace( /___R\[([0-9]*?)\]___/g, function( m, a ){
-            if( a > 1 ){
-                return '<div class="_wdt-row" data-depth="' + a + '" style="padding-left: ' + ( pad * a ) + 'px; display:none;" title="'+a+'">';
-            } else {
-                return '<div class="_wdt-row" data-depth="' + a + '" style="padding-left: ' + ( pad * a ) + 'px;" title="'+a+'">';
-            }
-        } );
-        html = html.replace( /___\/R___/g, '</div>' );
-        html = html.replace( /___A___/g, '<div class="_wdt-open-arrow">' + icons.caretRight + '</div><div class="_wdt-close-arrow">' + icons.caretDown + '</div>' );
-        html = html.replace( /___E\[(.*?)\]___/g, function( m, a ){
-            return '<span class="more">...&lt;/' + a + '&gt;</span>';
-        } );
-        html = html.replace( /___E___/g, '<span class="more">...</span>' );
-        html = html.replace( /___B___/g, '<br>' );
-        html = html.replace( /___BW___/g, '<div class="white">' );
-        html = html.replace( /___\/BW___/g, '</div>' );
-
-
-        //html = html.replace( /=""/g, '' );
-
-
-        return html;
-    };
-
-
-
-
-
-
-
-
-    var initialize = function(){
-        pageHTML = getPageElements();
-        elems.body = document.body;
-        addTools();
-        attachListeners();
-        addConsoleStack();
-        updateConsoleCounts();
-        showSources();
-    };
-
-
-
-
-
-
-
-
-
 
 
 
@@ -745,7 +992,7 @@ var WebDevTool = ( function(){
                 if( childrenHTML.indexOf( '\n' ) > -1  ){
 
                     parentHTML = '___R[' + level + ']______A___';
-                    parentHTML += elem.outerHTML.replace( elem.innerHTML || '', '___E[' + name + ']______/R______R[' + (level+1) + ']______BW______C______/BW______/R______R[' + level + ']___' );
+                    parentHTML += elem.outerHTML.replace( elem.innerHTML || '', '___E[' + name + ']______/R______R[' + (level+1) + ']______T______C______/T______/R______R[' + level + ']___' );
                     parentHTML += '___/R___';
                     //parentHTML = parentHTML.replace( '___C___', childrenHTML );
                 } else {
@@ -753,7 +1000,7 @@ var WebDevTool = ( function(){
                     var index = textContent.indexOf( elem.nodeName.toLowerCase() );
 
                     if( index > -1 ){
-                        childrenHTML = elem.outerHTML.replace( '</' + textContent[index] + '>', '___/BW___</' + textContent[index] + '>' ).replace( '>', '>___BW___' );
+                        childrenHTML = elem.outerHTML.replace( '</' + textContent[index] + '>', '___/T___</' + textContent[index] + '>' ).replace( '>', '>___T___' );
                     } else{
                         childrenHTML = elem.outerHTML;
                     }
@@ -807,44 +1054,13 @@ var WebDevTool = ( function(){
         }
     };
 
-    var ewResizing = function( elem, callback ){
-        //console.log('MOVING');
-        if( status.resizeElement.dataset.resizing == 'true' ){
-            status.resizeCallback( event );
-            event.preventDefault();
-        }
-
-    };
-
-    var ewResizeStart = function( elem, callback ){
-        //console.log('STARTED');
-        elem.dataset.resizing = true;
-        status.resizeElement = elem;
-        status.resizeCallback = callback;
-        document.addEventListener( 'mousemove', nsResizing );
-        document.addEventListener( 'mouseup', nsResizeStop );
-        event.preventDefault();
-    };
-
-    var ewResizeStop = function( elem, callback ){
-        //console.log('STOPPED');
-        if( status.resizeElement != null ){
-            document.removeEventListener( 'mousemove', nsResizing );
-            document.removeEventListener( 'mouseup', nsResizeStop );
-            status.resizeElement.dataset.resizing = false;
-            status.resizeElement = null;
-            status.resizeCallback = null;
-            event.preventDefault();
-        }
-    };
-
     var runCommand = function(){
         // Create the message div.
         var message = document.createElement('DIV');
         message.classList.add('_wdt-row');
 
         // Grab the users command and attempt to run it; tag its class accordingly.
-        var command = elems.consoleInput.querySelector('textarea').value.trim();
+        var command = elems.consoleInputArea.querySelector('textarea').value.trim();
         var result, type, source = ':1:';
 
         // Check if we need to process this command differently.
@@ -917,7 +1133,7 @@ var WebDevTool = ( function(){
         } );
 
         // Clear our console and scroll if needed.
-        elems.consoleInput.querySelector('textarea').value = '';
+        elems.consoleInputArea.querySelector('textarea').value = '';
         scrollConsole();
         updateConsoleCounts();
     };
@@ -1014,7 +1230,7 @@ var WebDevTool = ( function(){
                 status.console.commandIndex++;
             }
             if( status.console.commands[ status.console.commandIndex ] ){
-                elems.consoleInput.querySelector('textarea').value = status.console.commands[ status.console.commandIndex ];
+                elems.consoleInputArea.querySelector('textarea').value = status.console.commands[ status.console.commandIndex ];
             } else {
                 status.console.commandIndex--;
             }
@@ -1023,13 +1239,13 @@ var WebDevTool = ( function(){
         if( event.key == 'ArrowDown' ){
             if( status.console.commandIndex == 0 ){
                 status.console.commandIndex = -1;
-                elems.consoleInput.querySelector('textarea').value = '';
+                elems.consoleInputArea.querySelector('textarea').value = '';
             } else {
                 if( status.console.commandIndex > 0 ){
                     status.console.commandIndex--;
                 }
                 if( status.console.commands[ status.console.commandIndex ] ){
-                    elems.consoleInput.querySelector('textarea').value = status.console.commands[ status.console.commandIndex ];
+                    elems.consoleInputArea.querySelector('textarea').value = status.console.commands[ status.console.commandIndex ];
                 } else {
                     status.console.commandIndex++;
                 }
@@ -1058,8 +1274,8 @@ var WebDevTool = ( function(){
 
     var scrollConsole = function(){
         if( elems.consoleTab.classList.contains('_wdt-active') ){
-            elems.consoleInput.scrollIntoView( { alignToTop: false, behavior: 'auto', block: 'end' } )
-            elems.consoleInput.querySelector('textarea').focus();
+            elems.consoleInputArea.scrollIntoView( { alignToTop: false, behavior: 'auto', block: 'end' } )
+            elems.consoleInputArea.querySelector('textarea').focus();
         }
     };
 
