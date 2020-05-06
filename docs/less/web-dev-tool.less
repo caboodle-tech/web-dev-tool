@@ -12,6 +12,9 @@
     left: 0;
     right: 0;
     border-top: 1px solid #000;
+    font-family: monospace;
+    font-size: 16px;
+    line-height: 24px;
 
     #_wdt-tools-resizer {
         position: absolute;
@@ -23,6 +26,7 @@
         cursor: ns-resize;
     }
 
+    // START MAIN TOOLBAR.
     #_wdt-toolbar {
         position: absolute;
         top: 0;
@@ -35,13 +39,14 @@
         border-top: 1px solid #4c4c4c;
         border-bottom: 1px solid #4c4c4c;
         z-index: 5000;
+        font-family: monospace;
 
         ._wdt-tab {
             display: inline-block;
-            height: 28px;
-            max-height: 28px;
+            height: 30px;
+            max-height: 30px;
             font-size: 15px;
-            line-height: 28px;
+            line-height: 30px;
             padding: 0 15px;
             overflow: hidden;
             cursor: pointer;
@@ -130,8 +135,9 @@
                 color: #fff;
             }
         }
-    } // END TOOLBAR
+    } // END MAIN TOOLBAR.
 
+    // START PAGE AREA.
     #_wdt-page {
         position: absolute;
         top: 30px;
@@ -142,6 +148,7 @@
         background-color: #232323;
         font-family: monospace;
         color: #71aed5;
+        font-family: monospace;
 
         ._wdt-hidden {
             display: none;
@@ -150,6 +157,7 @@
         #_wdt-elementPage {
             flex-direction: column;
             padding: 0.5rem 0.5rem 0.5rem 0;
+            font-family: monospace;
 
             ._wdt-row {
 
@@ -226,6 +234,7 @@
         #_wdt-consolePage {
             flex-direction: column;
             height: 100%;
+            font-family: monospace;
 
             a, a:visited {
                 color: #71aed5;
@@ -392,6 +401,7 @@
         #_wdt-sourcePage {
             flex-direction: row;
             height: 100%;
+            font-family: monospace;
 
             // START SOURCE TREE.
             #_wdt-source-tree {
@@ -505,5 +515,5 @@
                 overflow: auto;
             }
         } // END SOURCE PAGE.
-    }
+    } // END PAGE AREA.
 }
