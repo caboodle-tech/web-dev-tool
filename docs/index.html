@@ -1,7 +1,24 @@
 <!DOCTYPE html>
 <head>
+    <!--
+        This stylesheet is for development only.
+    -->
+    <link rel="stylesheet" href="css/web-dev-tool.css">
     <script type="text/javascript" src="js/web-dev-tool.js"></script>
 </head>
 <body>
-    <p>Press F12 or Ctrl + Shuft + I</p>
+    <p>Press <code>F12</code> or <code>Ctrl + Shift + I</code> if you do not see the dev tools below.</p>
+    <p>Demo coming soon.</p>
+
+    <!-- Open the dev tool for this demo if it's not already open. -->
+    <script type="text/javascript">
+        if( localStorage.getItem('_wdt-visual-settings') ){
+            var settings = JSON.parse( localStorage.getItem('_wdt-visual-settings') );
+            if( ! settings.consoleOpen ){
+                setTimeout( function(){
+                    WebDevTool.open();
+                }, 500 );
+            }
+        }
+    </script>
 </body>

@@ -2,13 +2,14 @@
  * Web Dev Tool
  * https://github.com/caboodle-tech/web-dev-tool
  *
- * Version: 0.6.0
+ * Version: 0.7.1
  *
  * Copyright Christopher Keers (Caboodle Tech Inc)
  * https://github.com/blizzardengle (https://github.com/caboodle-tech)
  *
  * Released under the MIT license.
- * Date: 2020-05-05
+ * Released: 2020-05-05
+ * Updated: 2020-05-07
  *
  * Icons licensed separately:
  *  - Font Awesome (https://github.com/caboodle-tech/whiteboard/FontAwesomeLicense.md)
@@ -18,9 +19,13 @@
  * Slimmed down developer tools for headless browsers and embedded web based applications.
  *
  * @author Christopher Keers <source@caboodle.tech>
- * @version 0.6.0
+ * @version 0.7.1
  */
 var WebDevTool = ( function(){
+
+    /*----------------------*\
+     *      PROPERTIES      *
+    \*----------------------*/
 
     // A place to store all the references to the elements we need to add to the page.
     var elems = {};
@@ -40,27 +45,33 @@ var WebDevTool = ( function(){
 
     // A place to store all the status' and states.
     var status = {
+        activePage: '_wdt-elementPage',
         consoleMethods: [
             'error', 'log', 'warn'
         ],
         consoleOpen: false,
         consoleStack: [],
+        devMode: false,
         keyStack: [],
         resizeCallback: null,
         resizeElement: null,
         sourceWidth: 300,
         toolsHeight: 250,
-        version: '0.6.0'
+        version: '0.7.1'
     };
 
     // Web Dev Tool's styles to be injected into the page.
-    var styles = "#_web-dev-tool{display:none;position:fixed;bottom:0;left:0;right:0;border-top:1px solid #000;font-family:monospace;font-size:16px;line-height:24px}#_web-dev-tool #_wdt-tools-resizer{position:absolute;top:-10px;left:0;right:0;height:10px;background-color:rgba(255,255,255,0);cursor:ns-resize}#_web-dev-tool #_wdt-toolbar{position:absolute;top:0;left:0;right:0;height:30px;color:#d8d8d8;background-color:#333;padding:0 15px;border-top:1px solid #4c4c4c;border-bottom:1px solid #4c4c4c;z-index:5000;font-family:monospace}#_web-dev-tool #_wdt-toolbar ._wdt-tab{display:inline-block;height:30px;max-height:30px;font-size:15px;line-height:30px;padding:0 15px;overflow:hidden;cursor:pointer}#_web-dev-tool #_wdt-toolbar ._wdt-tab._wdt-active{color:#fff;background-color:#1f1f1f}#_web-dev-tool #_wdt-toolbar ._wdt-tab:hover{color:#fff;background-color:#1f1f1f}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts{float:right;display:inline-block;height:28px;line-height:28px;cursor:pointer}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-error-icon{position:relative;display:inline-block}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-error-icon svg{margin-bottom:-2px;fill:#ff8080;width:15px;height:15px}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-warn-icon{position:relative;display:inline-block}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-warn-icon svg{margin-bottom:-2px;fill:#fedc9d;width:15px;height:15px}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-count{display:inline-block;padding:0 10px 0 5px}#_web-dev-tool #_wdt-toolbar #_wdt-version{float:right}#_web-dev-tool #_wdt-toolbar #_wdt-version a,#_web-dev-tool #_wdt-toolbar #_wdt-version a:visited{color:#d8d8d8}#_web-dev-tool #_wdt-toolbar #_wdt-version:hover a{color:#fff}#_web-dev-tool #_wdt-toolbar #_wdt-closeButton{display:flex;align-items:center;float:right;height:28px;max-height:28px;line-height:28px;padding:0 15px;cursor:pointer}#_web-dev-tool #_wdt-toolbar #_wdt-closeButton svg{height:18px;width:18px;fill:#d8d8d8}#_web-dev-tool #_wdt-toolbar #_wdt-closeButton:hover{background-color:#1f1f1f}#_web-dev-tool #_wdt-toolbar #_wdt-closeButton:hover svg{color:#fff}#_web-dev-tool #_wdt-page{position:absolute;top:30px;left:0;right:0;bottom:0;overflow-y:auto;background-color:#232323;color:#71aed5;font-family:monospace}#_web-dev-tool #_wdt-page ._wdt-hidden{display:none}#_web-dev-tool #_wdt-page #_wdt-elementPage{flex-direction:column;padding:.5rem .5rem .5rem 0;font-family:monospace}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-close-arrow,#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-open-arrow{position:absolute;display:block;margin:2px 0 0 -20px;width:18px;height:18px;cursor:pointer}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-close-arrow svg,#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-open-arrow svg{fill:#aaa;width:18px;height:18px;cursor:pointer}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-close-arrow:after,#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-open-arrow:after{content:'';display:block;position:absolute;top:-3px;left:-6px;width:25px;height:25px}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-close-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row._wdt-open{position:relative}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row._wdt-open>._wdt-open-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row._wdt-open>._wdt-more{display:none}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row._wdt-open>._wdt-close-arrow{display:block}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row:hover{background-color:#252c36;cursor:default}#_web-dev-tool #_wdt-page #_wdt-elementPage .attribute{display:inline-block;color:#9bb6c7}#_web-dev-tool #_wdt-page #_wdt-elementPage .value{display:inline-block;color:#d38643}#_web-dev-tool #_wdt-page #_wdt-elementPage .white{display:inline-block;color:#fff}#_web-dev-tool #_wdt-page #_wdt-consolePage{flex-direction:column;height:100%;font-family:monospace}#_web-dev-tool #_wdt-page #_wdt-consolePage a,#_web-dev-tool #_wdt-page #_wdt-consolePage a:visited{color:#71aed5;text-decoration:none}#_web-dev-tool #_wdt-page #_wdt-consolePage a:hover{text-decoration:underline}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row{display:flex;padding:3px 10px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg{flex:1;text-align:left}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row{cursor:default}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-close-arrow,#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-open-arrow{margin:2px 0 0 -9px;width:18px;height:18px;cursor:pointer}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-close-arrow svg,#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-open-arrow svg{fill:#aaa;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-close-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-symbol{display:inline-block;color:#209cee;font-style:italic;font-weight:700}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-more{display:inline-block}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row._wdt-open>._wdt-open-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row._wdt-open>._wdt-more{display:none}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row._wdt-open>._wdt-close-arrow{display:block}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-source{text-align:right}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-consume,#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-error{color:#ff8080;border-top:1px solid #5c0000;border-bottom:1px solid #5c0000;background-color:#290000}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-consume ._wdt-error-icon,#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-error ._wdt-error-icon{position:relative;display:inline-block;width:16px;height:16px;margin:0 10px 0 0}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-consume ._wdt-error-icon svg,#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-error ._wdt-error-icon svg{position:absolute;top:2px;fill:#ff8080;width:16px;height:16px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-warn{color:#fedc9d;border-top:1px solid #650;border-bottom:1px solid #650;background-color:#332b00}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-warn ._wdt-warn-icon{position:relative;display:inline-block;width:16px;height:16px;margin:0 10px 0 0}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-warn ._wdt-warn-icon svg{position:absolute;top:2px;fill:#fedc9d;width:16px;height:16px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-log{color:#d8d8d8;border-top:1px solid #3a3a3a;border-bottom:1px solid #3a3a3a}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input{display:flex;flex-direction:row;flex:1;min-height:60px;padding:10px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input ._wdt-icon{margin:0 7px 0 0;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input ._wdt-icon svg{fill:#209cee;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input ._wdt-input-wrapper{flex:1}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input ._wdt-input-wrapper ._wdt-input{width:100%;height:100%;padding:2px;font-size:16px;line-height:16px;font-family:monospace;color:#d8d8d8;background-color:rgba(255,255,255,0);border:0;outline:0;resize:none}#_web-dev-tool #_wdt-page #_wdt-sourcePage{flex-direction:row;height:100%;font-family:monospace}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree{position:relative;width:300px;padding:.5rem 0;background-color:#333;color:#d8d8d8;overflow-y:auto;white-space:nowrap}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row{position:relative;cursor:default}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-icon{position:relative;display:inline-block;width:18px;height:18px;margin:0 .5rem 0 0}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-icon svg{margin-bottom:-2px;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-close-arrow,#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-open-arrow{position:absolute;margin:1px 0 0 -20px;width:18px;height:18px;cursor:pointer}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-close-arrow svg,#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-open-arrow svg{fill:#aaa;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-close-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row._wdt-site ._wdt-icon svg{fill:#fff}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row._wdt-folder ._wdt-icon svg{fill:#9bb6c7}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row._wdt-file ._wdt-icon svg{fill:#d38643}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row._wdt-open>._wdt-open-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row._wdt-open>._wdt-close-arrow{display:block}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row:hover{background-color:#252c36;cursor:default}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-resizer{position:relative;height:100%;width:1px;background-color:#333;cursor:ew-resize}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-resizer:after{content:'';position:absolute;top:0;bottom:0;left:0;width:10px;background-color:rgba(255,255,255,0);z-index:9000}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-code{flex:1;position:relative;border-left:1px solid #4c4c4c;overflow:auto}";
+    var styles = "#_web-dev-tool{display:none;position:fixed;bottom:0;left:0;right:0;border-top:1px solid #000;font-family:monospace;font-size:16px;line-height:24px}#_web-dev-tool #_wdt-tools-resizer{position:absolute;top:-10px;left:0;right:0;height:10px;background-color:rgba(255,255,255,0);cursor:ns-resize}#_web-dev-tool #_wdt-toolbar{position:absolute;top:0;left:0;right:0;height:30px;color:#d8d8d8;background-color:#333;padding:0 15px;border-top:1px solid #4c4c4c;border-bottom:1px solid #4c4c4c;z-index:5000;font-family:monospace}#_web-dev-tool #_wdt-toolbar ._wdt-tab{display:inline-block;height:30px;max-height:30px;font-size:15px;line-height:30px;padding:0 15px;overflow:hidden;cursor:pointer}#_web-dev-tool #_wdt-toolbar ._wdt-tab._wdt-active{color:#fff;background-color:#1f1f1f}#_web-dev-tool #_wdt-toolbar ._wdt-tab:hover{color:#fff;background-color:#1f1f1f}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts{float:right;display:inline-block;height:28px;line-height:28px;cursor:pointer}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-error-icon{position:relative;display:inline-block}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-error-icon svg{margin-bottom:-2px;fill:#ff8080;width:15px;height:15px}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-warn-icon{position:relative;display:inline-block}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-warn-icon svg{margin-bottom:-2px;fill:#fedc9d;width:15px;height:15px}#_web-dev-tool #_wdt-toolbar #_wdt-console-counts ._wdt-count{display:inline-block;padding:0 10px 0 5px}#_web-dev-tool #_wdt-toolbar #_wdt-version{float:right}#_web-dev-tool #_wdt-toolbar #_wdt-version a,#_web-dev-tool #_wdt-toolbar #_wdt-version a:visited{color:#d8d8d8}#_web-dev-tool #_wdt-toolbar #_wdt-version:hover a{color:#fff}#_web-dev-tool #_wdt-toolbar #_wdt-closeButton{display:flex;align-items:center;float:right;height:28px;max-height:28px;line-height:28px;padding:0 15px;cursor:pointer}#_web-dev-tool #_wdt-toolbar #_wdt-closeButton svg{height:18px;width:18px;fill:#d8d8d8}#_web-dev-tool #_wdt-toolbar #_wdt-closeButton:hover{background-color:#1f1f1f}#_web-dev-tool #_wdt-toolbar #_wdt-closeButton:hover svg{color:#fff}#_web-dev-tool #_wdt-page{position:absolute;top:30px;left:0;right:0;bottom:0;overflow-y:auto;background-color:#232323;color:#71aed5;font-family:monospace}#_web-dev-tool #_wdt-page ._wdt-hidden{display:none}#_web-dev-tool #_wdt-page #_wdt-elementPage{flex-direction:column;padding:.5rem .5rem .5rem 0;font-family:monospace}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-close-arrow,#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-open-arrow{position:absolute;display:block;margin:2px 0 0 -20px;width:18px;height:18px;cursor:pointer}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-close-arrow svg,#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-open-arrow svg{fill:#aaa;width:18px;height:18px;cursor:pointer}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-close-arrow:after,#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-open-arrow:after{content:'';display:block;position:absolute;top:-3px;left:-6px;width:25px;height:25px}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row ._wdt-close-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row._wdt-open{position:relative}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row._wdt-open>._wdt-open-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row._wdt-open>._wdt-more{display:none}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row._wdt-open>._wdt-close-arrow{display:block}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-row:hover{background-color:#252c36;cursor:default}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-attribute{display:inline-block;color:#9bb6c7}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-value{display:inline-block;color:#d38643}#_web-dev-tool #_wdt-page #_wdt-elementPage ._wdt-white{display:inline-block;color:#fff}#_web-dev-tool #_wdt-page #_wdt-consolePage{flex-direction:column;height:100%;font-family:monospace}#_web-dev-tool #_wdt-page #_wdt-consolePage a,#_web-dev-tool #_wdt-page #_wdt-consolePage a:visited{color:#71aed5;text-decoration:none}#_web-dev-tool #_wdt-page #_wdt-consolePage a:hover{text-decoration:underline}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row{display:flex;padding:3px 10px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg{flex:1;text-align:left}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row{cursor:default}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-close-arrow,#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-open-arrow{margin:2px 0 0 -9px;width:18px;height:18px;cursor:pointer}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-close-arrow svg,#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-open-arrow svg{fill:#aaa;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-close-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-symbol{display:inline-block;color:#209cee;font-style:italic;font-weight:700}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row ._wdt-more{display:inline-block}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row._wdt-open>._wdt-open-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row._wdt-open>._wdt-more{display:none}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-msg ._wdt-row._wdt-open>._wdt-close-arrow{display:block}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-row ._wdt-source{text-align:right}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-consume,#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-error{color:#ff8080;border-top:1px solid #5c0000;border-bottom:1px solid #5c0000;background-color:#290000}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-consume ._wdt-error-icon,#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-error ._wdt-error-icon{position:relative;display:inline-block;width:16px;height:16px;margin:0 10px 0 0}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-consume ._wdt-error-icon svg,#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-error ._wdt-error-icon svg{position:absolute;top:2px;fill:#ff8080;width:16px;height:16px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-warn{color:#fedc9d;border-top:1px solid #650;border-bottom:1px solid #650;background-color:#332b00}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-warn ._wdt-warn-icon{position:relative;display:inline-block;width:16px;height:16px;margin:0 10px 0 0}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-warn ._wdt-warn-icon svg{position:absolute;top:2px;fill:#fedc9d;width:16px;height:16px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-messages ._wdt-log{color:#d8d8d8;border-top:1px solid #3a3a3a;border-bottom:1px solid #3a3a3a}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input{display:flex;flex-direction:row;flex:1;min-height:60px;padding:10px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input ._wdt-icon{margin:0 7px 0 0;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input ._wdt-icon svg{fill:#209cee;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input ._wdt-input-wrapper{flex:1}#_web-dev-tool #_wdt-page #_wdt-consolePage #_wdt-console-input ._wdt-input-wrapper ._wdt-input{width:100%;height:100%;padding:2px;font-size:16px;line-height:16px;font-family:monospace;color:#d8d8d8;background-color:rgba(255,255,255,0);border:0;outline:0;resize:none}#_web-dev-tool #_wdt-page #_wdt-sourcePage{flex-direction:row;height:100%;font-family:monospace}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree{position:relative;width:300px;padding:.5rem 0;background-color:#333;color:#d8d8d8;overflow-y:auto;white-space:nowrap}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row{position:relative;cursor:default}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-icon{position:relative;display:inline-block;width:18px;height:18px;margin:0 .5rem 0 0}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-icon svg{margin-bottom:-2px;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-close-arrow,#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-open-arrow{position:absolute;margin:1px 0 0 -20px;width:18px;height:18px;cursor:pointer}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-close-arrow svg,#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-open-arrow svg{fill:#aaa;width:18px;height:18px}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row ._wdt-close-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row._wdt-site ._wdt-icon svg{fill:#fff}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row._wdt-folder ._wdt-icon svg{fill:#9bb6c7}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row._wdt-file ._wdt-icon svg{fill:#d38643}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row._wdt-open>._wdt-open-arrow{display:none}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row._wdt-open>._wdt-close-arrow{display:block}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-tree ._wdt-row:hover{background-color:#252c36;cursor:default}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-resizer{position:relative;height:100%;width:1px;background-color:#333;cursor:ew-resize}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-resizer:after{content:'';position:absolute;top:0;bottom:0;left:0;width:10px;background-color:rgba(255,255,255,0);z-index:9000}#_web-dev-tool #_wdt-page #_wdt-sourcePage #_wdt-source-code{flex:1;position:relative;border-left:1px solid #4c4c4c;padding:.5rem;overflow:auto}";
 
     // HTML elements that will receive text (white) highlighting on the Elements page.
-    var textContent = [ 'a', 'abbr', 'acronym', 'b', 'cite', 'del', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'i', 'kbd', 'label', 'li', 'mark', 'p', 'progress', 'q', 's', 'samp', 'small', 'span', 'strong', 'time', 'u', 'var', 'wbr' ];
+    var textContent = [ 'a', 'abbr', 'acronym', 'b', 'cite', 'code', 'del', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'i', 'kbd', 'label', 'li', 'mark', 'p', 'progress', 'q', 's', 'samp', 'small', 'span', 'strong', 'time', 'u', 'var', 'wbr' ];
 
     // A place to store the HTML that made up this page before Web Dev Tool was injected.
     var pageHTML = '';
+
+    /*--------------------------*\
+     *      PRIVATE METHODS     *
+    \*--------------------------*/
 
     /**
      * When we build the HTML for the Elements page the head and body tags are hidden, unhide them.
@@ -87,9 +98,11 @@ var WebDevTool = ( function(){
      */
     var addTools = function(){
 
-        // Add our stylesheet to the page.
+        // Add our styles to the page if in production mode.
         elems.style = document.createElement('STYLE');
-        elems.style.innerText = styles;
+        if( ! status.devMode ){
+            elems.style.innerText = styles;
+        }
 
         // Add the dev tools container.
         elems.tools = document.createElement('DIV');
@@ -158,7 +171,7 @@ var WebDevTool = ( function(){
         var html = '<div class="_wdt-icon">' + icons.terminal + '</div>';
         html += '<div class="_wdt-input-wrapper"><textarea class="_wdt-input"></textarea>';
         elems.consoleInputArea.innerHTML = html;
-        elems.consoleInput = elems.consoleInput;
+        elems.consoleInput = elems.consoleInputArea.querySelector('textarea');
 
         // Add the Source tab.
         elems.sourceTab = document.createElement('DIV');
@@ -175,9 +188,10 @@ var WebDevTool = ( function(){
         elems.sourcePage.classList.add('_wdt-hidden');
         elems.page.appendChild( elems.sourcePage );
 
-        // Add the Source tree area to the Source page.
+        // Add the Source tree area to the Source page and set its default width.
         elems.sourceTree = document.createElement('DIV');
         elems.sourceTree.id = "_wdt-source-tree";
+        elems.sourceTree.style.width = status.sourceWidth + 'px';
         elems.sourcePage.appendChild( elems.sourceTree );
 
         // Add a resizing bar for the Source tree.
@@ -282,19 +296,28 @@ var WebDevTool = ( function(){
     };
 
     /**
-     * Switch pages based on which tab was clicked on.
+     * Switch pages based on which tab was clicked on of specifically passed in.
+     *
+     * @param  {Event|Null}  e   The event that triggered this call or null if we specifically pass in a tab.
+     * @param  {String|Null} tab The tab we want to specifically change to or null if this call was triggered by a click.
      */
-    var changeTab = function(){
+    var changeTab = function( e, tab ){
 
-        var elem = event.target || event.srcElement;
-        if( ! elem.classList.contains('_wdt-tab') ){
-            elem = elem.closest('._wdt-tab');
+        if( tab ){
+            elem = elems.toolbar.querySelector( '[data-page="' + tab + '"]' );
+        } else {
+            var elem = e.target || e.srcElement;
+            if( ! elem.classList.contains('_wdt-tab') ){
+                elem = elem.closest('._wdt-tab');
+            }
         }
         var activeTab = elems.toolbar.querySelector('._wdt-active');
 
         // Switch the active element with the _wdt-active class.
         activeTab.classList.remove('_wdt-active');
         elem.classList.add('_wdt-active');
+        status.activePage = elem.dataset.page;
+        recordVisualSettings();
 
         // Switch the active page now.
         document.getElementById( activeTab.dataset.page ).classList.add( '_wdt-hidden' );
@@ -312,10 +335,12 @@ var WebDevTool = ( function(){
      * Close the dev tools.
      */
     var closeTools = function(){
+        status.consoleOpen = false;
         elems.tools.style.display = 'none';
         var height = document.documentElement.clientHeight;
         document.documentElement.style.overflowY = 'auto';
         document.body.style.maxHeight = height + 'px';
+        recordVisualSettings();
     };
 
     /**
@@ -349,6 +374,7 @@ var WebDevTool = ( function(){
             status.resizeElement.dataset.resizing = false;
             status.resizeElement = null;
             status.resizeCallback = null;
+            recordVisualSettings();
             event.preventDefault();
         }
     };
@@ -402,7 +428,7 @@ var WebDevTool = ( function(){
         html = html.replace( /</g, '&lt;' ).replace( />/g, '&gt;');
 
         // Wrap all HTML attributes in key value paired divs so we can color highlight them.
-        html = html.replace( /([\w\d\-_]*?)="([\w\d\s\/\.=\-&_,;:]*?)"/g, '<div class="attribute">$1</div>="<div class="value">$2</div>"' );
+        html = html.replace( /([\w\d\-_]*?)="([\w\d\s\/\.=\-&_,;:]*?)"/g, '<div class="_wdt-attribute">$1</div>="<div class="_wdt-value">$2</div>"' );
 
         // Replace all row start tags (___R___) with the row div and appropriate padding for this rows depth.
         html = html.replace( /___R\[([0-9]*?)\]___/g, function( match, depth ){
@@ -419,14 +445,14 @@ var WebDevTool = ( function(){
         html = html.replace( /___A___/g, '<div class="_wdt-open-arrow">' + icons.caretRight + '</div><div class="_wdt-close-arrow">' + icons.caretDown + '</div>' );
         // Replace all ellipses tags (___E___) with the more div followed by the appropriate closing tag.
         html = html.replace( /___E\[(.*?)\]___/g, function( match, tag ){
-            return '<span class="more">...&lt;/' + tag + '&gt;</span>';
+            return '<span class="_wdt-more">...&lt;/' + tag + '&gt;</span>';
         } );
         // Not every ellipses tag belongs to an element that needed a closing tag so replace what we missed.
-        html = html.replace( /___E___/g, '<span class="more">...</span>' );
+        html = html.replace( /___E___/g, '<span class="_wdt-more">...</span>' );
         // Replace all line break tags (___B___) with an HTML line break.
         html = html.replace( /___B___/g, '<br>' );
         // Replace all text content tags (___T___) with the opening text content div.
-        html = html.replace( /___T___/g, '<div class="white">' );
+        html = html.replace( /___T___/g, '<div class="_wdt-white">' );
         // Replace all closing text content tags (___/T___) with the closing text content div.
         html = html.replace( /___\/T___/g, '</div>' );
 
@@ -529,6 +555,12 @@ var WebDevTool = ( function(){
         addConsoleStack();
         updateConsoleCounts();
         showSources();
+
+        // Return the dev tools back to it's previous state.
+        changeTab( null, status.activePage );
+        if( status.consoleOpen ){
+            openTools();
+        }
     };
 
     /**
@@ -615,6 +647,7 @@ var WebDevTool = ( function(){
             status.resizeElement.dataset.resizing = false;
             status.resizeElement = null;
             status.resizeCallback = null;
+            recordVisualSettings();
             event.preventDefault();
         }
     };
@@ -638,6 +671,8 @@ var WebDevTool = ( function(){
      */
     var openTools = function(){
 
+        status.consoleOpen = true;
+
         var height = document.documentElement.clientHeight;
 
         document.documentElement.style.overflowY = 'hidden';
@@ -646,6 +681,8 @@ var WebDevTool = ( function(){
 
         elems.tools.style.display = 'block';
         elems.tools.style.height = status.toolsHeight + 'px';
+
+        recordVisualSettings();
     };
 
     /**
@@ -668,6 +705,10 @@ var WebDevTool = ( function(){
         // Load the previous visual settings if there are any.
         if( localStorage.getItem('_wdt-visual-settings') ){
             var settings = JSON.parse( localStorage.getItem('_wdt-visual-settings') );
+            status.activePage = settings.activePage;
+            status.consoleOpen = settings.consoleOpen;
+            status.sourceWidth = settings.sourceWidth;
+            status.toolsHeight = settings.toolsHeight;
         }
 
         /**
@@ -764,6 +805,25 @@ var WebDevTool = ( function(){
     };
 
     /**
+     * Saves to local storage our current visual settings.
+     */
+    var recordVisualSettings = function(){
+        var settings = {
+            activePage: status.activePage,
+            consoleOpen: status.consoleOpen,
+            sourceWidth: elems.sourceTree.clientWidth,
+            toolsHeight: elems.tools.clientHeight
+        };
+        if( settings.sourceWidth < 250 ){
+            settings.sourceWidth = 250;
+        }
+        if( settings.toolsHeight < 200 ){
+            settings.toolsHeight = 200;
+        }
+        localStorage.setItem( '_wdt-visual-settings', JSON.stringify( settings ) );
+    };
+
+    /**
      * Recursively build the HTML for getPageElements().
      *
      * @param  {Element} elem        The current element from the DOW we are injesting.
@@ -839,6 +899,23 @@ var WebDevTool = ( function(){
     };
 
     /**
+     * Using the current mouse location resize the dev tools left or right.
+     *
+     * @param {Event} e The Event object for the event that triggered this function.
+     */
+    var resizeSourceTree = function( e ){
+
+        // Get page dimensions.
+        var x = e.clientX;
+        var pageWidth = document.documentElement.clientWidth;
+
+        // Resize the source tree but insure it is always 150px wide or greater.
+        if( x > 150 && ( pageWidth - x ) > 300 ){
+            elems.sourceTree.style.width = x + 'px';
+        }
+    };
+
+    /**
      * Using the current mouse location resize the dev tools up or down.
      *
      * @param {Event} e The Event object for the event that triggered this function.
@@ -894,8 +971,6 @@ var WebDevTool = ( function(){
                 }
                 if( status.console.commands[ status.console.commandIndex ] ){
                     elems.consoleInput.value = status.console.commands[ status.console.commandIndex ];
-                } else {
-                    status.console.commandIndex++;
                 }
             }
         }
@@ -953,17 +1028,29 @@ var WebDevTool = ( function(){
             }
         }
 
-        // Add this to the command history and reset the index.
-        status.console.commands.unshift( command );
-        status.console.commandIndex = -1;
-
-        // Limit history to 50 commands.
-        if( status.console.commands.length > 50 ){
-            status.console.commands.pop();
+        // Is this command the same as the last run command? Default to no.
+        var addFlag = true;
+        if( status.console.commands.length > 0 ){
+            if( status.console.commands[0] == command ){
+                // Yes.
+                addFlag = false;
+                status.console.commandIndex = -1;
+            }
         }
 
-        // Write out the new history to localStorage.
-        localStorage.setItem( '_wdt-command-history', JSON.stringify( status.console.commands ) );
+        // Add this to the command history if it was not the previously run command and reset the index.
+        if( addFlag ){
+            status.console.commands.unshift( command );
+            status.console.commandIndex = -1;
+
+            // Limit history to 50 commands.
+            if( status.console.commands.length > 50 ){
+                status.console.commands.pop();
+            }
+
+            // Write out the new history to localStorage.
+            localStorage.setItem( '_wdt-command-history', JSON.stringify( status.console.commands ) );
+        }
 
         // Build the messages HTML.
         var html = '<div class="_wdt-msg">' + printResult( result ) + '</div>';
@@ -1331,8 +1418,12 @@ var WebDevTool = ( function(){
      * Print the version info to the console for the user.
      */
     var versionMessage = function(){
+        var dev = ' [DEV MODE]';
+        if( ! status.devMode ){
+            dev = '';
+        }
         var html = '<div class="_wdt-msg">';
-        html += 'Web Developer Tool for headless browsers. Version: ' + status.version + '<br>';
+        html += 'Web Developer Tool for headless browsers. Version: ' + status.version + dev + '<br>';
         html += '&nbsp;&nbsp;&nbsp;&nbsp;repository at <a href="https://github.com/caboodle-tech/web-dev-tool">https://github.com/caboodle-tech/web-dev-tool</a><br>';
         html += '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;donations at <a href="https://ko-fi.com/caboodletech">https://ko-fi.com/caboodletech</a>';
         html += '</div><div class="_wdt-source">:1:</div>';
@@ -1347,6 +1438,25 @@ var WebDevTool = ( function(){
         status.console.log.apply( null, [ message.innerText.replace( ':1:', '' ) ] );
     };
 
+    /*---------------------------------*\
+     *  PUBLIC METHODS & INITIALIZERS  *
+    \*---------------------------------*/
+
+    // Allow the user to programmatically close the dev tools.
+    var callCloseTools = function(){
+        closeTools();
+    };
+
+    // Allow the user to programmatically open the dev tools.
+    var callOpenTools = function(){
+        openTools();
+    };
+
+    // Send back a clone of the status object.
+    var getStatus = function(){
+        return JSON.parse( JSON.stringify( status ) );
+    };
+
     // Load Web Dev Tool when the DOM is ready.
     window.addEventListener( 'load', initialize );
 
@@ -1359,8 +1469,9 @@ var WebDevTool = ( function(){
      * @public
      */
     return {
-        status: status,
-        open: openTools
+        close: callCloseTools,
+        getStatus: getStatus,
+        open: callOpenTools
     };
 
 })();

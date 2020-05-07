@@ -29,5 +29,5 @@ Yes you can! Web Dev Tool was developed with the mindset of helping teach Univer
 
 If you have other use cases for Web Dev Tool please feel free to add them and submit a pull request. As long as the changes don't make it hard for students to use Web Dev Tool it will probably get merged.
 
-You can also help me keep the lights on:<br>
+You can also help me keep the lights on:<br><br>
 [![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/P5P41NDNT)

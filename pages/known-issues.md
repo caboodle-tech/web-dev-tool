@@ -30,3 +30,23 @@ Printing a function or object to the console in Web Dev Tool looks terrible or o
 
 **Fixable:**<br>
 Yes. A merge request will be accepted as long as the output fits the current theme with collapsing sections (rows).
+
+---
+
+### scrollbars are not visible
+
+**Description:**<br>
+Headless browsers based on Chromium and/or the type of user agent string used by the headless browser, will cause scrollbars to render as invisible. This makes using the Web Dev Tool difficult especially for East West scrolling.
+
+**Fixable:**<br>
+Yes. We will need to consume the normal scrollbar to insure they are always rendered. A merge request will be accepted as long as the output fits the current theme.
+
+---
+
+### dev tool height does not stick / reduces height
+
+**Description:**<br>
+The last used height of the tool bar does not stick on page reload or reduces slightly.
+
+**Fixable:**<br>
+Yes. The math and/or recording of size to local storage is messed up. A merge request will be accepted for this fix.
